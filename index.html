@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,maximum-scale=1" />
+  <title>Ton21 Mine</title>
+
+  <!-- TonPlay SDK (потом можно использовать для real ads) -->
+  <script src="https://sdk.tonplay.io/sdk.js"></script>
+
+  <style>
+    :root{
+      --bg:#050813;
+      --panel:#0f1624;
+      --gold1:#ffdf88;
+      --gold2:#f0cf6d;
+      --txt:#e8ecf7;
+      --muted:#9fb0c3;
+      --accent:#25d366;
+      --danger:#ff4e4e;
+    }
+    *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:radial-gradient(1200px 700px at 50% -10%, #1b2232 0%, #050813 55%, #020308 100%);
+      color:var(--txt);
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding:16px;
+    }
+    .app{
+      width:100%;
+      max-width:420px;
+      background:linear-gradient(145deg,#0c111c,#10182a);
+      border-radius:18px;
+      padding:14px 12px 18px;
+      box-shadow:0 0 40px rgba(0,0,0,0.6);
+      border:1px solid rgba(255,255,255,0.06);
+      position:relative;
+      overflow:hidden;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .logo-circle{
+      width:32px;height:32px;border-radius:50%;
+      background:conic-gradient(from 160deg,var(--gold1),var(--gold2),#caa24f,var(--gold1));
+      display:flex;align-items:center;justify-content:center;
+      color:#1a1204;font-weight:900;font-size:18px;
+      box-shadow:0 0 14px rgba(240,207,109,0.55);
+    }
+    .title-main{font-size:16px;font-weight:700;}
+    .title-sub{font-size:11px;color:var(--muted);}
+    .pill{
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      font-size:10px;
+      color:var(--muted);
+    }
+
+    .lang-switch{
+      display:flex;
+      gap:4px;
+      margin-top:4px;
+      justify-content:flex-end;
+    }
+    .lang-pill{
+      border:none;
+      border-radius:999px;
+      padding:3px 6px;
+      font-size:10px;
+      cursor:pointer;
+      background:rgba(5,9,19,0.9);
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.06);
+    }
+    .lang-pill.active{
+      background:linear-gradient(135deg,var(--gold1),var(--gold2));
+      color:#1a1307;
+      border-color:transparent;
+      font-weight:700;
+    }
+
+    .panel{
+      background:radial-gradient(circle at 0 0,rgba(240,207,109,0.08),transparent 55%);
+      border-radius:14px;
+      padding:10px;
+      border:1px solid rgba(255,255,255,0.06);
+      margin-bottom:10px;
+    }
+    .panel-title{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:4px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap;}
+    .stat-box{
+      flex:1;min-width:0;
+      background:#050913;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.06);
+      padding:6px 7px;
+      font-size:11px;
+    }
+    .stat-label{color:var(--muted);margin-bottom:2px;}
+    .stat-value{font-size:15px;font-weight:700;}
+
+    .mine-area{text-align:center;}
+    .mine-circle{
+      width:150px;height:150px;
+      border-radius:50%;
+      margin:4px auto 6px;
+      background:radial-gradient(circle at 30% 0%,#2b3750 0%,#151c2b 35%,#060813 100%);
+      border:1px solid rgba(255,255,255,0.08);
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      position:relative;
+      overflow:hidden;
+      transition:transform 0.1s ease;
+    }
+    .mine-depth{
+      position:absolute;
+      bottom:6px;left:0;right:0;
+      font-size:11px;color:var(--muted);
+    }
+    .big-number{font-size:26px;font-weight:800;text-shadow:0 0 10px rgba(0,0,0,0.8);}
+    .big-label{font-size:11px;color:var(--muted);}
+    .btn-primary{
+      width:100%;
+      margin-top:6px;
+      border:none;
+      border-radius:999px;
+      padding:11px 12px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      color:#1b1307;
+      background:linear-gradient(135deg,var(--gold1),var(--gold2));
+      box-shadow:0 0 18px rgba(240,207,109,0.65);
+    }
+    .btn-primary:active{transform:scale(0.97);}
+    .btn-sm{
+      flex:1;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:#050913;
+      color:var(--muted);
+      font-size:11px;
+      padding:6px 7px;
+      cursor:pointer;
+    }
+    .btn-sm:active{transform:scale(0.97);}
+    .btn-sm.green{border-color:rgba(37,211,102,0.4);}
+    .btn-sm.gold{border-color:rgba(240,207,109,0.5);}
+    .btn-sm.red{border-color:rgba(255,78,78,0.6);}
+
+    .res-list{
+      font-size:11px;
+      display:grid;
+      grid-template-columns:1.1fr 1fr;
+      gap:3px 6px;
+    }
+    .res-name{color:var(--muted);}
+    .res-val{text-align:right;font-weight:600;}
+
+    .log{
+      font-size:11px;
+      color:var(--muted);
+      max-height:90px;
+      overflow-y:auto;
+      margin-top:6px;
+    }
+    .log-line{margin-bottom:3px;}
+
+    .bank-info{font-size:11px;color:var(--muted);margin-top:4px;}
+
+    /* overlay for 7-sec ad */
+    .ad-overlay{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,0.82);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      color:var(--txt);
+      font-size:14px;
+      text-align:center;
+      padding:20px;
+      z-index:20;
+      backdrop-filter:blur(4px);
+      display:none;
+    }
+    .ad-timer{
+      margin-top:8px;
+      font-size:18px;
+      font-weight:700;
+      color:var(--gold1);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="ad-overlay" id="adOverlay">
+    <div id="adText">Ad is playing...</div>
+    <div class="ad-timer" id="adTimer">7</div>
+  </div>
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-circle">T</div>
+      <div>
+        <div class="title-main" id="titleMain">Ton21 Mine</div>
+        <div class="title-sub" id="titleSub">Early access mining</div>
+      </div>
+    </div>
+    <div>
+      <div class="pill">
+        <span id="depthLabel">Depth</span>:
+        <span id="depthLevel">1</span>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-pill" data-lang="en" id="lang-en">EN</button>
+        <button class="lang-pill" data-lang="ru" id="lang-ru">RU</button>
+        <button class="lang-pill" data-lang="cn" id="lang-cn">CN</button>
+        <button class="lang-pill" data-lang="in" id="lang-in">IN</button>
+        <button class="lang-pill" data-lang="am" id="lang-am">AM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Balances -->
+  <div class="panel">
+    <div class="panel-title" id="balancesTitle">Balances</div>
+    <div class="row">
+      <div class="stat-box">
+        <div class="stat-label" id="lblCommon">Common ore</div>
+        <div class="stat-value" id="commonOre">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="lblRare">Rare ore</div>
+        <div class="stat-value" id="rareOre">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="lblEpic">Epic ore</div>
+        <div class="stat-value" id="epicOre">0</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <div class="stat-box">
+        <div class="stat-label" id="lblDiamonds">Diamonds 💎</div>
+        <div class="stat-value" id="diamondsVal">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="lblT21">T21 (in game)</div>
+        <div class="stat-value" id="t21Val">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mining -->
+  <div class="panel mine-area">
+    <div class="panel-title">
+      <span id="mineTitle">Mining</span>
+      <span style="font-size:11px;color:var(--muted);" id="toolInfo">
+        Pickaxe: durability <span id="toolDurability">200</span>
+      </span>
+    </div>
+
+    <div class="mine-circle" id="mineCircle">
+      <div class="big-number" id="minePowerText">+1</div>
+      <div class="big-label" id="mineLabel">ore per tap</div>
+      <div class="mine-depth" id="mineDepthText">Depth 1</div>
+    </div>
+
+    <button class="btn-primary" id="mineBtn">⛏ Mine</button>
+
+    <div class="row" style="margin-top:8px;">
+      <button class="btn-sm green" id="buyToolBtn">⚒️ Buy new pickaxe</button>
+      <button class="btn-sm gold" id="btnCommonToRare">↻ 50 common → 1 rare</button>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-sm gold" id="btnRareToEpic">↻ 5 rare → 1 epic</button>
+      <button class="btn-sm gold" id="btnEpicToDiamond">↻ 2 epic → 1 💎</button>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-sm gold" id="btnDiamondToT21">💎 → +1 T21</button>
+    </div>
+
+    <div class="log" id="logBox"></div>
+  </div>
+
+  <!-- Bank -->
+  <div class="panel">
+    <div class="panel-title">
+      <span id="bankTitle">Ton21 Bank</span>
+    </div>
+    <div class="res-list">
+      <div class="res-name" id="lblT21Progress">T21 progress</div>
+      <div class="res-val" id="t21ProgressText">0 / 100</div>
+      <div class="res-name" id="lblBankRule">Withdrawal rule</div>
+      <div class="res-val" id="bankRuleValue">100 T21 = 1 request</div>
+    </div>
+    <div class="bank-info" id="bankInfoText">
+      When you reach 100 T21 in game, you can send a withdrawal request. Real T21 will be paid manually by admin.
+    </div>
+    <button class="btn-primary" id="withdrawBtn" style="margin-top:8px;">
+      🏦 Request withdrawal (100 T21)
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // -------------------- State --------------------
+  const state = {
+    common: 0,
+    rare: 0,
+    epic: 0,
+    diamonds: 0,
+    t21: 0,
+    depth: 1,
+    minePower: 1,
+    toolDurability: 200,
+    toolMaxDurability: 200
+  };
+
+  let adRunning = false;
+
+  // -------------------- Languages --------------------
+  const texts = {
+    en: {
+      title_main: "Ton21 Mine",
+      title_sub: "Early access mining",
+      depth: "Depth",
+      balances_title: "Balances",
+      common: "Common ore",
+      rare: "Rare ore",
+      epic: "Epic ore",
+      diamonds: "Diamonds 💎",
+      t21: "T21 (in game)",
+      mining: "Mining",
+      ore_per_tap: "ore per tap",
+      buy_tool: "⚒️ Buy new pickaxe",
+      c2r: "↻ 50 common → 1 rare",
+      r2e: "↻ 5 rare → 1 epic",
+      e2d: "↻ 2 epic → 1 💎",
+      d2t21: "💎 → +1 T21",
+      bank_title: "Ton21 Bank",
+      t21_progress: "T21 progress",
+      bank_rule: "Withdrawal rule",
+      bank_rule_value: "100 T21 = 1 request",
+      bank_info: "When you reach 100 T21, you can send a withdrawal request. Real T21 will be paid manually by admin.",
+      withdraw_btn: "🏦 Request withdrawal (100 T21)",
+      log_mine: "You mined common ore.",
+      log_tool_broken: "Your pickaxe is broken. Buy a new one to continue.",
+      log_tool_buy_ok: "New pickaxe bought!",
+      log_tool_buy_fail: "Not enough common ore to buy a pickaxe.",
+      log_c2r_fail: "You need 50 common ore for exchange.",
+      log_c2r_ok: "Exchange: 50 common → +1 rare.",
+      log_r2e_fail: "You need 5 rare ore for exchange.",
+      log_r2e_ok: "Exchange: 5 rare → +1 epic.",
+      log_e2d_fail: "You need 2 epic ore for exchange.",
+      log_e2d_ok: "Exchange: 2 epic → +1 diamond.",
+      log_d2t21_fail: "You need 1 diamond for +1 T21.",
+      log_d2t21_ok: "Diamond converted → +1 T21.",
+      log_withdraw_fail: "You need at least 100 T21 to request a withdrawal.",
+      log_withdraw_ok: "Withdrawal request prepared. TON address: ",
+      ad_title: "Rewarded ad is playing...\nPlease wait 7 seconds.",
+      ad_done: "Ad finished, exchange completed!"
+    },
+    ru: {
+      title_main: "Ton21 Mine",
+      title_sub: "Ранний доступ к майнингу",
+      depth: "Глубина",
+      balances_title: "Баланс ресурсов",
+      common: "Обычная руда",
+      rare: "Редкая руда",
+      epic: "Эпическая руда",
+      diamonds: "Бриллианты 💎",
+      t21: "T21 (в игре)",
+      mining: "Добыча",
+      ore_per_tap: "руды за клик",
+      buy_tool: "⚒️ Купить кирку",
+      c2r: "↻ 50 обычной → 1 редкая",
+      r2e: "↻ 5 редких → 1 эпическая",
+      e2d: "↻ 2 эпические → 1 💎",
+      d2t21: "💎 → +1 T21",
+      bank_title: "Банк Ton21",
+      t21_progress: "Прогресс T21",
+      bank_rule: "Правило вывода",
+      bank_rule_value: "100 T21 = 1 заявка",
+      bank_info: "Когда накопите 100 T21 в игре, сможете отправить заявку на вывод. Реальные T21 выплачиваются вручную админом.",
+      withdraw_btn: "🏦 Отправить заявку (100 T21)",
+      log_mine: "Вы добыли обычную руду.",
+      log_tool_broken: "Кирка сломалась. Купите новую, чтобы продолжить.",
+      log_tool_buy_ok: "Новая кирка куплена!",
+      log_tool_buy_fail: "Недостаточно обычной руды для покупки кирки.",
+      log_c2r_fail: "Нужно 50 обычной руды для обмена.",
+      log_c2r_ok: "Обмен: 50 обычной → +1 редкая.",
+      log_r2e_fail: "Нужно 5 редких руд для обмена.",
+      log_r2e_ok: "Обмен: 5 редких → +1 эпическая.",
+      log_e2d_fail: "Нужно 2 эпические руды для обмена.",
+      log_e2d_ok: "Обмен: 2 эпические → +1 бриллиант.",
+      log_d2t21_fail: "Нужен 1 бриллиант для +1 T21.",
+      log_d2t21_ok: "Бриллиант обменян → +1 T21.",
+      log_withdraw_fail: "Нужно минимум 100 T21, чтобы отправить заявку.",
+      log_withdraw_ok: "Заявка на вывод подготовлена. TON-адрес: ",
+      ad_title: "Идёт показ рекламы...\nПодождите 7 секунд.",
+      ad_done: "Реклама завершена, обмен выполнен!"
+    },
+    cn: {
+      title_main: "Ton21 Mine",
+      title_sub: "T21 早期挖矿",
+      depth: "深度",
+      balances_title: "资源余额",
+      common: "普通矿石",
+      rare: "稀有矿石",
+      epic: "史诗矿石",
+      diamonds: "钻石 💎",
+      t21: "T21（游戏内）",
+      mining: "挖矿",
+      ore_per_tap: "每次点击的矿石",
+      buy_tool: "⚒️ 购买镐子",
+      c2r: "↻ 50 普通 → 1 稀有",
+      r2e: "↻ 5 稀有 → 1 史诗",
+      e2d: "↻ 2 史诗 → 1 💎",
+      d2t21: "💎 → +1 T21",
+      bank_title: "Ton21 银行",
+      t21_progress: "T21 进度",
+      bank_rule: "提现规则",
+      bank_rule_value: "100 T21 = 1 次申请",
+      bank_info: "当你在游戏中获得 100 T21 时，可以提交提现申请。真实 T21 将由管理员手动发放。",
+      withdraw_btn: "🏦 提交提现申请 (100 T21)",
+      log_mine: "你挖到了普通矿石。",
+      log_tool_broken: "镐子坏了，需要购买新的。",
+      log_tool_buy_ok: "已购买新的镐子！",
+      log_tool_buy_fail: "普通矿石不足，无法购买镐子。",
+      log_c2r_fail: "需要 50 普通矿石才能兑换。",
+      log_c2r_ok: "兑换：50 普通 → +1 稀有。",
+      log_r2e_fail: "需要 5 稀有矿石才能兑换。",
+      log_r2e_ok: "兑换：5 稀有 → +1 史诗。",
+      log_e2d_fail: "需要 2 史诗矿石才能兑换。",
+      log_e2d_ok: "兑换：2 史诗 → +1 钻石。",
+      log_d2t21_fail: "需要 1 颗钻石才能获得 +1 T21。",
+      log_d2t21_ok: "钻石已兑换 → +1 T21。",
+      log_withdraw_fail: "需要至少 100 T21 才能申请提现。",
+      log_withdraw_ok: "提现申请已准备。TON 地址：",
+      ad_title: "正在播放激励广告…\n请等待 7 秒。",
+      ad_done: "广告结束，兑换完成！"
+    },
+    in: {
+      title_main: "Ton21 Mine",
+      title_sub: "T21 का प्रारंभिक माइनिंग",
+      depth: "गहराई",
+      balances_title: "संसाधन बैलेंस",
+      common: "साधारण अयस्क",
+      rare: "दुर्लभ अयस्क",
+      epic: "एपिक अयस्क",
+      diamonds: "हीरे 💎",
+      t21: "T21 (गेम में)",
+      mining: "माइनिंग",
+      ore_per_tap: "प्रति टैप अयस्क",
+      buy_tool: "⚒️ नया पिकैक्स खरीदें",
+      c2r: "↻ 50 साधारण → 1 दुर्लभ",
+      r2e: "↻ 5 दुर्लभ → 1 एपिक",
+      e2d: "↻ 2 एपिक → 1 💎",
+      d2t21: "💎 → +1 T21",
+      bank_title: "Ton21 बैंक",
+      t21_progress: "T21 प्रगति",
+      bank_rule: "निकासी नियम",
+      bank_rule_value: "100 T21 = 1 रिक्वेस्ट",
+      bank_info: "जब आपके पास 100 T21 हो जाएंगे, तो आप निकासी रिक्वेस्ट भेज सकते हैं। असली T21 एडमिन द्वारा मैन्युअली भेजे जाएंगे।",
+      withdraw_btn: "🏦 निकासी रिक्वेस्ट (100 T21)",
+      log_mine: "आपने साधारण अयस्क निकाला।",
+      log_tool_broken: "आपका पिकैक्स टूट गया। जारी रखने के लिए नया खरीदें।",
+      log_tool_buy_ok: "नया पिकैक्स खरीदा गया!",
+      log_tool_buy_fail: "पिकैक्स खरीदने के लिए साधारण अयस्क पर्याप्त नहीं।",
+      log_c2r_fail: "एक्सचेंज के लिए 50 साधारण अयस्क चाहिए।",
+      log_c2r_ok: "एक्सचेंज: 50 साधारण → +1 दुर्लभ।",
+      log_r2e_fail: "एक्सचेंज के लिए 5 दुर्लभ अयस्क चाहिए।",
+      log_r2e_ok: "एक्सचेंज: 5 दुर्लभ → +1 एपिक।",
+      log_e2d_fail: "एक्सचेंज के लिए 2 एपिक अयस्क चाहिए।",
+      log_e2d_ok: "एक्सचेंज: 2 एपिक → +1 हीरा।",
+      log_d2t21_fail: " +1 T21 के लिए 1 हीरा चाहिए।",
+      log_d2t21_ok: "हीरा एक्सचेंज हुआ → +1 T21।",
+      log_withdraw_fail: "निकासी के लिए कम से कम 100 T21 चाहिए।",
+      log_withdraw_ok: "निकासी रिक्वेस्ट तैयार। TON पता: ",
+      ad_title: "Rewarded ad चल रहा है…\nकृपया 7 सेकंड इंतज़ार करें।",
+      ad_done: "Ad खत्म, एक्सचेंज पूरा!"
+    },
+    am: {
+      title_main: "Ton21 Mine",
+      title_sub: "T21-ի վաղ մայնինգ",
+      depth: "Խորություն",
+      balances_title: "Պաշարների մնացորդ",
+      common: "Սովորական հանքաքար",
+      rare: "Կրկ. հանքաքար",
+      epic: "Էպիկ հանքաքար",
+      diamonds: "Ակններ 💎",
+      t21: "T21 (խաղում)",
+      mining: "Հանքափորում",
+      ore_per_tap: "հանքաքար՝ մեկ սեղմումով",
+      buy_tool: "⚒️ Գնել նոր բահակ (кирка)",
+      c2r: "↻ 50 սովոր. → 1 կրկ.",
+      r2e: "↻ 5 կրկ. → 1 էպիկ",
+      e2d: "↻ 2 էպիկ → 1 💎",
+      d2t21: "💎 → +1 T21",
+      bank_title: "Ton21 Բանկ",
+      t21_progress: "T21 առաջընթաց",
+      bank_rule: "Դուրսբերման կանոն",
+      bank_rule_value: "100 T21 = 1 հայտ",
+      bank_info: "Երբ խաղում կունենաք 100 T21, կարող եք ուղարկել հայտ դուրսբերման համար։ Իրական T21-ը կվճարվի ադմինի կողմից ձեռքով։",
+      withdraw_btn: "🏦 Ուղարկել հայտ (100 T21)",
+      log_mine: "Դուք հանքաքար եք հանել։",
+      log_tool_broken: "Բահակը կոտրվեց։ Գնեք նոր, որպեսզի շարունակեք։",
+      log_tool_buy_ok: "Նոր բահակն գնված է։",
+      log_tool_buy_fail: "Բավարար սովորական հանքաքար չկա բահակ գնելու համար։",
+      log_c2r_fail: "Պետք է 50 սովորական հանքաքար՝ փոխանակման համար։",
+      log_c2r_ok: "Փոխանակում՝ 50 սովոր. → +1 կրկ.",
+      log_r2e_fail: "Պետք է 5 կրկնակի հանքաքար՝ փոխանակման համար։",
+      log_r2e_ok: "Փոխանակում՝ 5 կրկ. → +1 էպիկ։",
+      log_e2d_fail: "Պետք է 2 էպիկ հանքաքար՝ փոխանակման համար։",
+      log_e2d_ok: "Փոխանակում՝ 2 էպիկ → +1 ակն։",
+      log_d2t21_fail: "Պետք է 1 ակն՝ +1 T21-ի համար։",
+      log_d2t21_ok: "Ակնը փոխվեց → +1 T21։",
+      log_withdraw_fail: "Դուրսբերման համար պետք է առնվազն 100 T21։",
+      log_withdraw_ok: "Դուրսբերման հայտը պատրաստ է։ TON հասցե՝ ",
+      ad_title: "Գովազդ է ցուցադրվում…\nՍպասեք 7 վայրկյան։",
+      ad_done: "Գովազդն ավարտվեց, փոխանակումը կատարված է։"
+    }
+  };
+
+  let currentLang = localStorage.getItem("t21mine_lang") || "ru";
+
+  function t(key){
+    return (texts[currentLang] && texts[currentLang][key]) || texts.en[key] || key;
+  }
+
+  // -------------------- UI Elements --------------------
+  const els = {
+    depthLabel: document.getElementById("depthLabel"),
+    depthLevel: document.getElementById("depthLevel"),
+    balancesTitle: document.getElementById("balancesTitle"),
+    lblCommon: document.getElementById("lblCommon"),
+    lblRare: document.getElementById("lblRare"),
+    lblEpic: document.getElementById("lblEpic"),
+    lblDiamonds: document.getElementById("lblDiamonds"),
+    lblT21: document.getElementById("lblT21"),
+    commonOre: document.getElementById("commonOre"),
+    rareOre: document.getElementById("rareOre"),
+    epicOre: document.getElementById("epicOre"),
+    diamondsVal: document.getElementById("diamondsVal"),
+    t21Val: document.getElementById("t21Val"),
+    mineTitle: document.getElementById("mineTitle"),
+    minePowerText: document.getElementById("minePowerText"),
+    mineLabel: document.getElementById("mineLabel"),
+    mineDepthText: document.getElementById("mineDepthText"),
+    toolInfo: document.getElementById("toolInfo"),
+    toolDurability: document.getElementById("toolDurability"),
+    bankTitle: document.getElementById("bankTitle"),
+    lblT21Progress: document.getElementById("lblT21Progress"),
+    lblBankRule: document.getElementById("lblBankRule"),
+    bankRuleValue: document.getElementById("bankRuleValue"),
+    bankInfoText: document.getElementById("bankInfoText"),
+    t21ProgressText: document.getElementById("t21ProgressText"),
+    withdrawBtn: document.getElementById("withdrawBtn"),
+    logBox: document.getElementById("logBox"),
+    mineBtn: document.getElementById("mineBtn"),
+    buyToolBtn: document.getElementById("buyToolBtn"),
+    btnC2R: document.getElementById("btnCommonToRare"),
+    btnR2E: document.getElementById("btnRareToEpic"),
+    btnE2D: document.getElementById("btnEpicToDiamond"),
+    btnD2T21: document.getElementById("btnDiamondToT21"),
+    titleMain: document.getElementById("titleMain"),
+    titleSub: document.getElementById("titleSub"),
+    adOverlay: document.getElementById("adOverlay"),
+    adText: document.getElementById("adText"),
+    adTimer: document.getElementById("adTimer"),
+    mineCircle: document.getElementById("mineCircle")
+  };
+
+  function applyLang(){
+    document.querySelectorAll(".lang-pill").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.lang === currentLang);
+    });
+    els.titleMain.textContent = t("title_main");
+    els.titleSub.textContent = t("title_sub");
+    els.depthLabel.textContent = t("depth");
+    els.balancesTitle.textContent = t("balances_title");
+    els.lblCommon.textContent = t("common");
+    els.lblRare.textContent = t("rare");
+    els.lblEpic.textContent = t("epic");
+    els.lblDiamonds.textContent = t("diamonds");
+    els.lblT21.textContent = t("t21");
+    els.mineTitle.textContent = t("mining");
+    els.mineLabel.textContent = t("ore_per_tap");
+    els.buyToolBtn.textContent = t("buy_tool");
+    els.btnC2R.textContent = t("c2r");
+    els.btnR2E.textContent = t("r2e");
+    els.btnE2D.textContent = t("e2d");
+    els.btnD2T21.textContent = t("d2t21");
+    els.bankTitle.textContent = t("bank_title");
+    els.lblT21Progress.textContent = t("t21_progress");
+    els.lblBankRule.textContent = t("bank_rule");
+    els.bankRuleValue.textContent = t("bank_rule_value");
+    els.bankInfoText.textContent = t("bank_info");
+    els.withdrawBtn.textContent = t("withdraw_btn");
+    updateUI();
+  }
+
+  document.querySelectorAll(".lang-pill").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      currentLang = btn.dataset.lang;
+      localStorage.setItem("t21mine_lang", currentLang);
+      applyLang();
+    });
+  });
+
+  // -------------------- Helpers --------------------
+  function addLog(text){
+    const div = document.createElement("div");
+    div.className = "log-line";
+    div.textContent = text;
+    els.logBox.prepend(div);
+    const lines = els.logBox.querySelectorAll(".log-line");
+    if (lines.length > 40) lines[lines.length-1].remove();
+  }
+
+  function updateUI(){
+    els.commonOre.textContent = state.common;
+    els.rareOre.textContent = state.rare;
+    els.epicOre.textContent = state.epic;
+    els.diamondsVal.textContent = state.diamonds;
+    els.t21Val.textContent = state.t21;
+    els.depthLevel.textContent = state.depth;
+    els.minePowerText.textContent = "+" + state.minePower;
+    els.mineDepthText.textContent = t("depth") + " " + state.depth;
+    els.toolDurability.textContent = state.toolDurability;
+    els.t21ProgressText.textContent = state.t21 + " / 100";
+    els.withdrawBtn.disabled = state.t21 < 100;
+    els.withdrawBtn.style.opacity = state.t21 < 100 ? 0.5 : 1;
+  }
+
+  // -------------------- Ad flow (7 sec + hook for real SDK) --------------------
+  function showRewardedAd(callback){
+    if (adRunning) return;
+    adRunning = true;
+
+    // TODO: когда подключишь TonPlay SDK, можно вызвать здесь настоящий показ рекламы.
+    // Пример (псевдокод):
+    // TonPlay.rewarded.show().then(() => callback()).finally(() => hide overlay);
+
+    let remaining = 7;
+    els.adText.textContent = t("ad_title");
+    els.adTimer.textContent = remaining;
+    els.adOverlay.style.display = "flex";
+
+    const timer = setInterval(()=>{
+      remaining--;
+      els.adTimer.textContent = remaining;
+      if (remaining <= 0){
+        clearInterval(timer);
+        els.adOverlay.style.display = "none";
+        addLog(t("ad_done"));
+        adRunning = false;
+        callback();
+      }
+    }, 1000);
+  }
+
+  // -------------------- Game logic --------------------
+  function mine(){
+    if (state.toolDurability <= 0){
+      addLog(t("log_tool_broken"));
+      return;
+    }
+    state.common += state.minePower;
+    state.toolDurability -= 1;
+    els.mineCircle.style.transform = "scale(0.96)";
+    setTimeout(()=>{ els.mineCircle.style.transform = "scale(1)"; }, 90);
+    addLog(t("log_mine"));
+    updateUI();
+  }
+
+  function buyTool(){
+    const cost = 20;
+    if (state.common < cost){
+      addLog(t("log_tool_buy_fail"));
+      return;
+    }
+    state.common -= cost;
+    state.toolDurability = state.toolMaxDurability;
+    addLog(t("log_tool_buy_ok"));
+    updateUI();
+  }
+
+  function doCommonToRare(){
+    const need = 50;
+    if (state.common < need){
+      addLog(t("log_c2r_fail"));
+      return;
+    }
+    showRewardedAd(()=>{
+      state.common -= need;
+      state.rare += 1;
+      addLog(t("log_c2r_ok"));
+      updateUI();
+    });
+  }
+
+  function doRareToEpic(){
+    const need = 5;
+    if (state.rare < need){
+      addLog(t("log_r2e_fail"));
+      return;
+    }
+    showRewardedAd(()=>{
+      state.rare -= need;
+      state.epic += 1;
+      addLog(t("log_r2e_ok"));
+      updateUI();
+    });
+  }
+
+  function doEpicToDiamond(){
+    const need = 2;
+    if (state.epic < need){
+      addLog(t("log_e2d_fail"));
+      return;
+    }
+    showRewardedAd(()=>{
+      state.epic -= need;
+      state.diamonds += 1;
+      addLog(t("log_e2d_ok"));
+      updateUI();
+    });
+  }
+
+  function doDiamondToT21(){
+    if (state.diamonds < 1){
+      addLog(t("log_d2t21_fail"));
+      return;
+    }
+    showRewardedAd(()=>{
+      state.diamonds -= 1;
+      state.t21 += 1;
+      addLog(t("log_d2t21_ok"));
+      updateUI();
+    });
+  }
+
+  function requestWithdrawal(){
+    if (state.t21 < 100){
+      addLog(t("log_withdraw_fail"));
+      return;
+    }
+    const addr = prompt("Enter your TON address / Введите ваш TON-адрес:");
+    if (!addr) return;
+    // Здесь в будущем можно отправить запрос в твой backend / бота.
+    addLog(t("log_withdraw_ok") + addr);
+    alert("Request saved locally.\nIn real version this will be sent to @Ton21MineBot.\n\nTON: " + addr + "\nAmount: 100 T21");
+    // Можно уменьшить баланс в игре:
+    state.t21 -= 100;
+    updateUI();
+  }
+
+  // -------------------- Event listeners --------------------
+  els.mineBtn.addEventListener("click", mine);
+  els.buyToolBtn.addEventListener("click", buyTool);
+  els.btnC2R.addEventListener("click", doCommonToRare);
+  els.btnR2E.addEventListener("click", doRareToEpic);
+  els.btnE2D.addEventListener("click", doEpicToDiamond);
+  els.btnD2T21.addEventListener("click", doDiamondToT21);
+  els.withdrawBtn.addEventListener("click", requestWithdrawal);
+
+  // Init
+  applyLang();
+</script>
+</body>
+</html>
