@@ -123,9 +123,9 @@
     .mine-scene{
       position:relative;
       width:100%;
-      height:150px;
+      height:180px;
       border-radius:12px;
-      background:linear-gradient(to bottom,#131b2b 0%,#151b28 35%,#090d15 36%,#070a12 100%);
+      background:linear-gradient(to bottom,#131b2b 0%,#151b28 28%,#090d15 29%,#070a12 100%);
       border:1px solid rgba(255,255,255,0.1);
       overflow:hidden;
       margin-bottom:8px;
@@ -140,7 +140,7 @@
     }
     .ground-layer{
       position:absolute;left:0;right:0;
-      height:18px;
+      height:20px;
       background:repeating-linear-gradient(
         90deg,
         #1a1f30 0 20px,
@@ -148,11 +148,12 @@
       );
       border-top:1px solid rgba(0,0,0,0.5);
     }
-    .ground-layer.layer1{top:48px;}
-    .ground-layer.layer2{top:66px;}
-    .ground-layer.layer3{top:84px;}
-    .ground-layer.layer4{top:102px;}
-    .ground-layer.layer5{top:120px;}
+    .ground-layer.layer1{top:48px;}  /* земля */
+    .ground-layer.layer2{top:68px;}  /* камень */
+    .ground-layer.layer3{top:88px;}  /* железо */
+    .ground-layer.layer4{top:108px;} /* золото */
+    .ground-layer.layer5{top:128px;} /* кристалл */
+    .ground-layer.layer6{top:148px;} /* мифический */
 
     .ore-spot{
       position:absolute;
@@ -165,14 +166,14 @@
 
     .miner{
       position:absolute;
-      bottom:34px;
+      bottom:38px;
       left:10px;
       width:32px;
       height:32px;
       display:flex;
       align-items:flex-end;
       justify-content:center;
-      animation:minerWalk 5s linear infinite;
+      animation:minerWalk 7s linear infinite;
     }
     .miner-body{
       width:24px;height:24px;
@@ -243,7 +244,7 @@
 
     @keyframes minerWalk{
       0%{transform:translateX(4px);}
-      50%{transform:translateX(250px);}
+      50%{transform:translateX(260px);}
       100%{transform:translateX(4px);}
     }
     @keyframes pickaxeSwing{
@@ -315,7 +316,7 @@
 
     .bank-info{font-size:11px;color:var(--muted);margin-top:4px;}
 
-    /* overlay for 7-sec ad */
+    /* overlay для рекламы 7 сек */
     .ad-overlay{
       position:absolute;
       inset:0;
@@ -417,12 +418,14 @@
       <div class="ground-layer layer3"></div>
       <div class="ground-layer layer4"></div>
       <div class="ground-layer layer5"></div>
+      <div class="ground-layer layer6"></div>
 
       <!-- немного руды в земле -->
-      <div class="ore-spot" style="left:40px;top:72px;"></div>
-      <div class="ore-spot" style="left:120px;top:90px;"></div>
-      <div class="ore-spot" style="left:210px;top:108px;"></div>
-      <div class="ore-spot" style="left:300px;top:82px;"></div>
+      <div class="ore-spot" style="left:30px;top:72px;"></div>
+      <div class="ore-spot" style="left:100px;top:90px;"></div>
+      <div class="ore-spot" style="left:190px;top:108px;"></div>
+      <div class="ore-spot" style="left:260px;top:128px;"></div>
+      <div class="ore-spot" style="left:310px;top:148px;"></div>
 
       <!-- искры возле кирки -->
       <div class="spark" style="left:70px;bottom:40px;"></div>
@@ -512,7 +515,6 @@
       diamonds: "Diamonds 💎",
       t21: "T21 (in game)",
       mining: "Mining",
-      ore_per_tap: "ore per tap",
       auto_info: "Auto mining: +1 common / 2s",
       tap_info: "Tap to help the miner and get extra ore.",
       buy_tool: "⚒️ Buy new pickaxe (20 common)",
@@ -555,7 +557,6 @@
       diamonds: "Бриллианты 💎",
       t21: "T21 (в игре)",
       mining: "Добыча",
-      ore_per_tap: "руды за клик",
       auto_info: "Автодобыча: +1 обычная руда / 2 сек.",
       tap_info: "Нажимай, чтобы помочь шахтёру и получить ещё руды.",
       buy_tool: "⚒️ Купить кирку (20 обычной)",
@@ -598,7 +599,6 @@
       diamonds: "钻石 💎",
       t21: "T21（游戏内）",
       mining: "挖矿",
-      ore_per_tap: "每次点击的矿石",
       auto_info: "自动挖矿：每 2 秒 +1 普通矿石",
       tap_info: "点击帮助矿工，获得额外矿石。",
       buy_tool: "⚒️ 购买镐子（20 普通矿石）",
@@ -641,7 +641,6 @@
       diamonds: "हीरे 💎",
       t21: "T21 (गेम में)",
       mining: "माइनिंग",
-      ore_per_tap: "प्रति टैप अयस्क",
       auto_info: "ऑटो माइनिंग: हर 2 सेकंड में +1 साधारण अयस्क",
       tap_info: "खनिक की मदद करने के लिए टैप करें और अतिरिक्त अयस्क पाएं।",
       buy_tool: "⚒️ नया पिकैक्स खरीदें (20 साधारण)",
@@ -684,7 +683,6 @@
       diamonds: "Ակններ 💎",
       t21: "T21 (խաղում)",
       mining: "Հանքափորում",
-      ore_per_tap: "հանքաքար՝ մեկ սեղմումով",
       auto_info: "Ավտոմայնինգ՝ +1 սովոր. / 2 վրկ.",
       tap_info: "Սեղմիր, որ օգնես հանքագործին և ստանաս ավել հանքաքար։",
       buy_tool: "⚒️ Գնել նոր բահակ (20 սովորական)",
@@ -740,7 +738,6 @@
     diamondsVal: document.getElementById("diamondsVal"),
     t21Val: document.getElementById("t21Val"),
     mineTitle: document.getElementById("mineTitle"),
-    mineDepthText: document.getElementById("mineDepthText"),
     toolInfo: document.getElementById("toolInfo"),
     toolDurability: document.getElementById("toolDurability"),
     bankTitle: document.getElementById("bankTitle"),
@@ -832,7 +829,7 @@
     if (adRunning) return;
     adRunning = true;
 
-    // сюда позже можно подключить реальный показ TonPlay Ads
+    // потом сюда можно добавить настоящий TonPlay Ads SDK
     let remaining = 7;
     els.adText.textContent = t("ad_title");
     els.adTimer.textContent = remaining;
@@ -948,6 +945,17 @@
     if (adRunning) return;
     if (state.toolDurability <= 0) return;
     state.common += state.minePowerAuto;
+
+    // простая логика глубины: чем больше общей руды, тем глубже
+    const totalOre = state.common + state.rare*50 + state.epic*250;
+    let newDepth = 1;
+    if (totalOre > 200) newDepth = 2;
+    if (totalOre > 600) newDepth = 3;
+    if (totalOre > 1500) newDepth = 4;
+    if (totalOre > 3000) newDepth = 5;
+    if (totalOre > 6000) newDepth = 6;
+    state.depth = newDepth;
+
     state.toolDurability -= 1;
     addLog(t("log_auto"));
     updateUI();
