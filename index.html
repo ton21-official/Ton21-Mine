@@ -122,7 +122,7 @@
     .stat-label{color:var(--muted);margin-bottom:2px;}
     .stat-value{font-size:15px;font-weight:700;}
 
-    /* Сцена для настоящей игры (сюда вставится canvas PixiJS) */
+    /* Сцена для настоящей игры (canvas PixiJS) */
     .mine-scene{
       position:relative;
       width:100%;
@@ -220,11 +220,36 @@
       font-weight:700;
       color:var(--gold1);
     }
+
+    /* TON-адрес + share */
+    .ton-block{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-top:4px;
+      font-size:11px;
+    }
+    .ton-row{
+      display:flex;
+      gap:6px;
+    }
+    .ton-input{
+      flex:1;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      padding:6px 10px;
+      background:#050913;
+      color:var(--txt);
+      font-size:11px;
+      outline:none;
+    }
+    .ton-input::placeholder{color:var(--muted);}
   </style>
 </head>
 <body>
 <div class="app">
 
+  <!-- Реклама 7 секунд -->
   <div class="ad-overlay" id="adOverlay">
     <div id="adText">Ad is playing...</div>
     <div class="ad-timer" id="adTimer">7</div>
@@ -287,7 +312,7 @@
     <div class="panel-title">
       <span id="mineTitle">Mining</span>
       <span style="font-size:11px;color:var(--muted);" id="toolInfo">
-        Pickaxe durability: <span id="toolDurability">200</span>
+        Pickaxe durability: <span id="toolDurability">200</span> (Lv.<span id="toolLevel">1</span>)
       </span>
     </div>
 
@@ -315,6 +340,21 @@
     <div class="log" id="logBox"></div>
   </div>
 
+  <!-- TON-адрес + Поделиться -->
+  <div class="panel">
+    <div class="panel-title">
+      <span id="tonPanelTitle">TON address & Share</span>
+    </div>
+    <div class="ton-block">
+      <div id="tonLabelText">Your TON address for payouts:</div>
+      <div class="ton-row">
+        <input id="tonAddressInput" class="ton-input" placeholder="UQ..." />
+        <button class="btn-sm green" id="saveTonBtn">💾 Save</button>
+      </div>
+      <button class="btn-sm gold" id="shareBtn">🔗 Share Ton21 Mine</button>
+    </div>
+  </div>
+
   <!-- Банк -->
   <div class="panel">
     <div class="panel-title">
@@ -337,6 +377,11 @@
 </div>
 
 <script>
+  // ============ Backend API (save to admin panel) ============
+  // Поставь сюда свой URL Cloudflare Worker / backend.
+  // Если оставить пустым, запросы просто не будут отправляться.
+  const API_BASE = ""; // напр. "https://t21-mine-api.example.com"
+
   // -------------------- Game state --------------------
   const state = {
     common: 0,
@@ -346,7 +391,14 @@
     t21: 0,
     depth: 1,
     toolDurability: 200,
-    toolMaxDurability: 200
+    toolMaxDurability: 200,
+    toolLevel: 1, // 1,2,3
+    toolPower: 1  // 1 → 1, 2 → 3, 3 → 5
+  };
+
+  const player = {
+    id: null,
+    tonAddress: ""
   };
 
   let adRunning = false;
@@ -366,7 +418,7 @@
       mining: "Mining",
       auto_info: "Miner walks & digs automatically.",
       tap_info: "Tap to help the miner and get extra ore.",
-      buy_tool: "⚒️ Buy new pickaxe (20 common)",
+      buy_tool: "⚒️ Buy pickaxe / upgrade (20 common)",
       c2r: "↻ 50 common → 1 rare",
       r2e: "↻ 5 rare → 1 epic",
       e2d: "↻ 2 epic → 1 💎",
@@ -380,7 +432,7 @@
       log_mine: "You helped the miner and got common ore.",
       log_auto: "Miner dug some ore.",
       log_tool_broken: "Your pickaxe is broken. Buy a new one to continue.",
-      log_tool_buy_ok: "New pickaxe bought!",
+      log_tool_buy_ok: "New pickaxe bought / upgraded!",
       log_tool_buy_fail: "Not enough common ore to buy a pickaxe.",
       log_c2r_fail: "You need 50 common ore for exchange.",
       log_c2r_ok: "Exchange: 50 common → +1 rare.",
@@ -393,7 +445,12 @@
       log_withdraw_fail: "You need at least 100 T21 to request a withdrawal.",
       log_withdraw_ok: "Withdrawal request prepared. TON address: ",
       ad_title: "Rewarded ad is playing...\nPlease wait 7 seconds.",
-      ad_done: "Ad finished, exchange completed!"
+      ad_done: "Ad finished, exchange completed!",
+      ton_title: "TON address & Share",
+      ton_label: "Your TON address for payouts:",
+      ton_saved: "TON address saved.",
+      ton_need: "Please enter your TON address first.",
+      share_ok: "Share link copied:"
     },
     ru: {
       title_main: "Ton21 Mine",
@@ -408,7 +465,7 @@
       mining: "Добыча",
       auto_info: "Шахтёр ходит и добывает автоматически.",
       tap_info: "Нажимай, чтобы помочь шахтёру и получить ещё руды.",
-      buy_tool: "⚒️ Купить кирку (20 обычной)",
+      buy_tool: "⚒️ Купить/улучшить кирку (20 обычной)",
       c2r: "↻ 50 обычной → 1 редкая",
       r2e: "↻ 5 редких → 1 эпическая",
       e2d: "↻ 2 эпические → 1 💎",
@@ -422,7 +479,7 @@
       log_mine: "Вы помогли шахтёру и получили обычную руду.",
       log_auto: "Шахтёр добыл немного руды.",
       log_tool_broken: "Кирка сломалась. Купите новую, чтобы продолжить.",
-      log_tool_buy_ok: "Новая кирка куплена!",
+      log_tool_buy_ok: "Новая кирка куплена / улучшена!",
       log_tool_buy_fail: "Недостаточно обычной руды для покупки кирки.",
       log_c2r_fail: "Нужно 50 обычной руды для обмена.",
       log_c2r_ok: "Обмен: 50 обычной → +1 редкая.",
@@ -435,7 +492,12 @@
       log_withdraw_fail: "Нужно минимум 100 T21, чтобы отправить заявку.",
       log_withdraw_ok: "Заявка на вывод подготовлена. TON-адрес: ",
       ad_title: "Идёт показ рекламы...\nПодождите 7 секунд.",
-      ad_done: "Реклама завершена, обмен выполнен!"
+      ad_done: "Реклама завершена, обмен выполнен!",
+      ton_title: "TON-адрес и поделиться",
+      ton_label: "Ваш TON-адрес для выплат:",
+      ton_saved: "TON-адрес сохранён.",
+      ton_need: "Сначала введите ваш TON-адрес.",
+      share_ok: "Ссылка для шаринга скопирована:"
     },
     cn: {
       title_main: "Ton21 Mine",
@@ -450,7 +512,7 @@
       mining: "挖矿",
       auto_info: "矿工自动走动并挖矿。",
       tap_info: "点击帮助矿工，获得额外矿石。",
-      buy_tool: "⚒️ 购买镐子（20 普通矿石）",
+      buy_tool: "⚒️ 购买/升级镐子（20 普通）",
       c2r: "↻ 50 普通 → 1 稀有",
       r2e: "↻ 5 稀有 → 1 史诗",
       e2d: "↻ 2 史诗 → 1 💎",
@@ -464,7 +526,7 @@
       log_mine: "你帮助了矿工，获得了普通矿石。",
       log_auto: "矿工自动挖到了一些矿石。",
       log_tool_broken: "镐子坏了，需要购买新的。",
-      log_tool_buy_ok: "已购买新的镐子！",
+      log_tool_buy_ok: "新的镐子已购买/升级！",
       log_tool_buy_fail: "普通矿石不足，无法购买镐子。",
       log_c2r_fail: "需要 50 普通矿石才能兑换。",
       log_c2r_ok: "兑换：50 普通 → +1 稀有。",
@@ -477,7 +539,12 @@
       log_withdraw_fail: "需要至少 100 T21 才能申请提现。",
       log_withdraw_ok: "提现申请已准备。TON 地址：",
       ad_title: "正在播放激励广告…\n请等待 7 秒。",
-      ad_done: "广告结束，兑换完成！"
+      ad_done: "广告结束，兑换完成！",
+      ton_title: "TON 地址与分享",
+      ton_label: "用于发放奖励的 TON 地址：",
+      ton_saved: "TON 地址已保存。",
+      ton_need: "请先输入你的 TON 地址。",
+      share_ok: "分享链接已复制："
     },
     in: {
       title_main: "Ton21 Mine",
@@ -492,7 +559,7 @@
       mining: "माइनिंग",
       auto_info: "खनिक अपने आप चलता और खोदता है।",
       tap_info: "खनिक की मदद करने के लिए टैप करें और अतिरिक्त अयस्क पाएं।",
-      buy_tool: "⚒️ नया पिकैक्स खरीदें (20 साधारण)",
+      buy_tool: "⚒️ नया/अपग्रेड पिकैक्स (20 साधारण)",
       c2r: "↻ 50 साधारण → 1 दुर्लभ",
       r2e: "↻ 5 दुर्लभ → 1 एपिक",
       e2d: "↻ 2 एपिक → 1 💎",
@@ -506,7 +573,7 @@
       log_mine: "आपने खनिक की मदद की और साधारण अयस्क पाया।",
       log_auto: "खनिक ने कुछ अयस्क खोदा।",
       log_tool_broken: "आपका पिकैक्स टूट गया। जारी रखने के लिए नया खरीदें।",
-      log_tool_buy_ok: "नया पिकैक्स खरीदा गया!",
+      log_tool_buy_ok: "नया पिकैक्स खरीदा/अपग्रेड किया गया!",
       log_tool_buy_fail: "पिकैक्स खरीदने के लिए साधारण अयस्क पर्याप्त नहीं।",
       log_c2r_fail: "एक्सचेंज के लिए 50 साधारण अयस्क चाहिए।",
       log_c2r_ok: "एक्सचेंज: 50 साधारण → +1 दुर्लभ।",
@@ -519,7 +586,12 @@
       log_withdraw_fail: "निकासी के लिए कम से कम 100 T21 चाहिए।",
       log_withdraw_ok: "निकासी रिक्वेस्ट तैयार। TON पता: ",
       ad_title: "Rewarded ad चल रहा है…\nकृपया 7 सेकंड इंतज़ार करें।",
-      ad_done: "Ad खत्म, एक्सचेंज पूरा!"
+      ad_done: "Ad खत्म, एक्सचेंज पूरा!",
+      ton_title: "TON address और Share",
+      ton_label: "रिवार्ड के लिए आपका TON address:",
+      ton_saved: "TON address सेव हो गया।",
+      ton_need: "पहले अपना TON address दर्ज करें।",
+      share_ok: "शेयर लिंक कॉपी हो गया:"
     },
     am: {
       title_main: "Ton21 Mine",
@@ -534,7 +606,7 @@
       mining: "Հանքափորում",
       auto_info: "Հանքագործը քայլում է և հանում հանքաքար ավտոմատ։",
       tap_info: "Սեղմիր, որ օգնես հանքագործին և ստանաս ավելի շատ հանքաքար։",
-      buy_tool: "⚒️ Գնել նոր բահակ (20 սովորական)",
+      buy_tool: "⚒️ Գնել/բարելավել բահակ (20 սովորական)",
       c2r: "↻ 50 սովոր. → 1 կրկ.",
       r2e: "↻ 5 կրկ. → 1 էպիկ",
       e2d: "↻ 2 էպիկ → 1 💎",
@@ -548,7 +620,7 @@
       log_mine: "Դուք օգնեցիք հանքագործին և ստացաք սովորական հանքաքար։",
       log_auto: "Հանքագործը ավտոմատ հանել է հանքաքար։",
       log_tool_broken: "Բահակը կոտրվեց։ Գնեք նոր, որպեսզի շարունակեք։",
-      log_tool_buy_ok: "Նոր բահակն գնված է։",
+      log_tool_buy_ok: "Նոր բահակն գնված/բարելավված է։",
       log_tool_buy_fail: "Բավարար սովորական հանքաքար չկա բահակ գնելու համար։",
       log_c2r_fail: "Պետք է 50 սովորական հանքաքար՝ փոխանակման համար։",
       log_c2r_ok: "Փոխանակում՝ 50 սովոր. → +1 կրկ.",
@@ -561,7 +633,12 @@
       log_withdraw_fail: "Դուրսբերման համար պետք է առնվազն 100 T21։",
       log_withdraw_ok: "Դուրսբերման հայտը պատրաստ է։ TON հասցե՝ ",
       ad_title: "Գովազդ է ցուցադրվում…\nՍպասեք 7 վայրկյան։",
-      ad_done: "Գովազդն ավարտվեց, փոխանակումը կատարված է։"
+      ad_done: "Գովազդն ավարտվեց, փոխանակումը կատարված է։",
+      ton_title: "TON հասցե և share",
+      ton_label: "Ձեր TON հասցեն՝ վճարների համար․",
+      ton_saved: "TON հասցեն պահպանված է։",
+      ton_need: "Նախ մուտքագրեք ձեր TON հասցեն։",
+      share_ok: "Share հղումը պատճենված է․"
     }
   };
 
@@ -588,6 +665,7 @@
     mineTitle: document.getElementById("mineTitle"),
     toolInfo: document.getElementById("toolInfo"),
     toolDurability: document.getElementById("toolDurability"),
+    toolLevel: document.getElementById("toolLevel"),
     bankTitle: document.getElementById("bankTitle"),
     lblT21Progress: document.getElementById("lblT21Progress"),
     lblBankRule: document.getElementById("lblBankRule"),
@@ -608,7 +686,12 @@
     adText: document.getElementById("adText"),
     adTimer: document.getElementById("adTimer"),
     autoInfo: document.getElementById("autoInfo"),
-    tapInfo: document.getElementById("tapInfo")
+    tapInfo: document.getElementById("tapInfo"),
+    tonPanelTitle: document.getElementById("tonPanelTitle"),
+    tonLabelText: document.getElementById("tonLabelText"),
+    tonAddressInput: document.getElementById("tonAddressInput"),
+    saveTonBtn: document.getElementById("saveTonBtn"),
+    shareBtn: document.getElementById("shareBtn")
   };
 
   function applyLang(){
@@ -638,6 +721,8 @@
     els.bankRuleValue.textContent = t("bank_rule_value");
     els.bankInfoText.textContent = t("bank_info");
     els.withdrawBtn.textContent = t("withdraw_btn");
+    els.tonPanelTitle.textContent = t("ton_title");
+    els.tonLabelText.textContent = t("ton_label");
     updateUI();
   }
 
@@ -666,25 +751,10 @@
     els.t21Val.textContent = state.t21;
     els.depthLevel.textContent = state.depth;
     els.toolDurability.textContent = state.toolDurability;
+    if (els.toolLevel) els.toolLevel.textContent = state.toolLevel;
     els.t21ProgressText.textContent = state.t21 + " / 100";
     els.withdrawBtn.disabled = state.t21 < 100;
     els.withdrawBtn.style.opacity = state.t21 < 100 ? 0.5 : 1;
-  }
-
-  // простой звук удара (без файлов)
-  function playHitSound(){
-    try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "square";
-      osc.frequency.value = 450;
-      gain.gain.value = 0.15;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      setTimeout(()=>{osc.stop();ctx.close();},120);
-    }catch(e){}
   }
 
   // ----------- Rewarded Ad 7 sec (заглушка) -----------
@@ -706,6 +776,52 @@
         callback();
       }
     },1000);
+  }
+
+  // ------------------ Player init & TON address ------------------
+  function initPlayer(){
+    try{
+      if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user){
+        player.id = String(Telegram.WebApp.initDataUnsafe.user.id);
+      } else {
+        player.id = localStorage.getItem("t21mine_player_id");
+        if (!player.id){
+          player.id = "demo-" + Math.random().toString(36).slice(2,10);
+          localStorage.setItem("t21mine_player_id", player.id);
+        }
+      }
+    }catch(e){
+      player.id = localStorage.getItem("t21mine_player_id") || ("demo-" + Math.random().toString(36).slice(2,10));
+      localStorage.setItem("t21mine_player_id", player.id);
+    }
+
+    const storedTon = localStorage.getItem("t21mine_ton_addr") || "";
+    player.tonAddress = storedTon;
+    if (els.tonAddressInput) els.tonAddressInput.value = storedTon;
+  }
+
+  async function saveProgress(reason){
+    if (!API_BASE) return;
+    try{
+      const payload = {
+        id: player.id,
+        ton_address: player.tonAddress || null,
+        lang: currentLang,
+        t21: state.t21,
+        diamonds: state.diamonds,
+        epic: state.epic,
+        rare: state.rare,
+        common: state.common,
+        reason
+      };
+      await fetch(API_BASE + "/mine/save", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+    }catch(e){
+      console.error("saveProgress error", e);
+    }
   }
 
   // ---------------------- PIXI GAME ----------------------
@@ -871,7 +987,6 @@
       minerDir = (currentBlock && currentBlock.g.x < miner.x) ? -1 : 1;
 
       if (miningTimer > 0.1){
-        playHitSound();
         state.toolDurability -= 1;
         if (state.toolDurability <= 0){
           minerState = "broken";
@@ -880,7 +995,7 @@
           return;
         }
         miningTimer = 0;
-        // шанс разрушить блок
+        // разрушить блок
         if (currentBlock){
           collectBlock(currentBlock);
           currentBlock = null;
@@ -902,24 +1017,26 @@
     block.collected = true;
     app.stage.removeChild(block.g);
 
+    const power = state.toolPower; // 1 / 3 / 5
+
     // награда по глубине
     const d = state.depth;
     if (d<=2){
-      state.common += 3;
+      state.common += 3 * power;
       addLog(t("log_auto"));
     } else if (d<=4){
-      state.common += 2;
-      state.rare += 1;
+      state.common += 2 * power;
+      state.rare += 1 * power;
       addLog(t("log_auto"));
     } else {
-      state.rare += 1;
+      state.rare += 1 * power;
       const r = Math.random();
-      if (r<0.7) state.epic += 1;
-      if (r>0.85) state.diamonds += 1;
+      if (r<0.7) state.epic += 1 * power;
+      if (r>0.85) state.diamonds += 1 * power;
       addLog(t("log_auto"));
     }
 
-    // немножко "глубже" чем больше руды
+    // глубина по сумме ресурсов
     const totalOre = state.common + state.rare*50 + state.epic*250;
     let newDepth = 1;
     if (totalOre > 200) newDepth = 2;
@@ -941,11 +1058,17 @@
       addLog(t("log_tool_broken"));
       return;
     }
-    state.common += 3;
+    const power = state.toolPower;
+    state.common += 3 * power;
     state.toolDurability -= 1;
-    playHitSound();
     addLog(t("log_mine"));
     updateUI();
+  }
+
+  function recalcToolPower(){
+    if (state.toolLevel === 1) state.toolPower = 1;
+    else if (state.toolLevel === 2) state.toolPower = 3;
+    else state.toolPower = 5;
   }
 
   function buyTool(){
@@ -955,9 +1078,16 @@
       return;
     }
     state.common -= cost;
+
+    // каждый раз чуть апгрейдим, до 3 уровня
+    if (state.toolLevel < 3){
+      state.toolLevel += 1;
+    }
+    recalcToolPower();
+    state.toolMaxDurability = 200 + (state.toolLevel-1)*100; // 200 / 300 / 400
     state.toolDurability = state.toolMaxDurability;
     minerState = "moving";
-    addLog(t("log_tool_buy_ok"));
+    addLog(t("log_tool_buy_ok") + " (Lv." + state.toolLevel + ")");
     updateUI();
   }
 
@@ -1018,12 +1148,58 @@
       addLog(t("log_withdraw_fail"));
       return;
     }
-    const addr = prompt("Enter your TON address / Введите ваш TON-адрес:");
+    const addrPrompt = "Enter your TON address / Введите ваш TON-адрес:";
+    const addr = player.tonAddress || prompt(addrPrompt);
     if (!addr) return;
+    player.tonAddress = addr;
+    localStorage.setItem("t21mine_ton_addr", addr);
     addLog(t("log_withdraw_ok") + addr);
     alert("Request saved locally.\nВ реальной версии это пойдёт в @Ton21MineBot.\n\nTON: " + addr + "\nAmount: 100 T21");
     state.t21 -= 100;
     updateUI();
+    saveProgress("withdraw_100");
+  }
+
+  // TON address save + share
+  function bindTonControls(){
+    if (els.saveTonBtn){
+      els.saveTonBtn.addEventListener("click", ()=>{
+        const val = (els.tonAddressInput.value || "").trim();
+        if (!val){
+          alert(t("ton_need"));
+          return;
+        }
+        player.tonAddress = val;
+        localStorage.setItem("t21mine_ton_addr", val);
+        addLog(t("ton_saved") + " " + val);
+        saveProgress("set_ton_address");
+      });
+    }
+
+    if (els.shareBtn){
+      els.shareBtn.addEventListener("click", ()=>{
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = baseUrl;
+        const text = "Ton21 Mine — mine T21 with me!";
+        try{
+          if (window.Telegram && Telegram.WebApp && Telegram.WebApp.openTelegramLink){
+            Telegram.WebApp.openTelegramLink(
+              "https://t.me/share/url?url=" + encodeURIComponent(shareUrl) +
+              "&text=" + encodeURIComponent(text)
+            );
+          } else if (navigator.share){
+            navigator.share({title:"Ton21 Mine", text, url:shareUrl});
+          } else if (navigator.clipboard){
+            navigator.clipboard.writeText(shareUrl);
+            alert(t("share_ok") + " " + shareUrl);
+          } else {
+            alert(shareUrl);
+          }
+        }catch(e){
+          alert(shareUrl);
+        }
+      });
+    }
   }
 
   // ------------------ Bind events ------------------
@@ -1036,6 +1212,9 @@
   els.withdrawBtn.addEventListener("click", requestWithdrawal);
 
   // ------------------ Init ------------------
+  initPlayer();
+  bindTonControls();
+  recalcToolPower();
   applyLang();
   setupPixi();
 </script>
