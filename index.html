@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,maximum-scale=1" />
   <title>Ton21 Mine</title>
 
-  <!-- TonPlay SDK (потом можно использовать для real ads) -->
+  <!-- TonPlay SDK (на будущее для real ads) -->
   <script src="https://sdk.tonplay.io/sdk.js"></script>
 
   <style>
@@ -119,26 +119,153 @@
     .stat-label{color:var(--muted);margin-bottom:2px;}
     .stat-value{font-size:15px;font-weight:700;}
 
-    .mine-area{text-align:center;}
-    .mine-circle{
-      width:150px;height:150px;
-      border-radius:50%;
-      margin:4px auto 6px;
-      background:radial-gradient(circle at 30% 0%,#2b3750 0%,#151c2b 35%,#060813 100%);
-      border:1px solid rgba(255,255,255,0.08);
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
+    /* Сцена шахты (Idle Miner стиль) */
+    .mine-scene{
       position:relative;
+      width:100%;
+      height:150px;
+      border-radius:12px;
+      background:linear-gradient(to bottom,#131b2b 0%,#151b28 35%,#090d15 36%,#070a12 100%);
+      border:1px solid rgba(255,255,255,0.1);
       overflow:hidden;
-      transition:transform 0.1s ease;
+      margin-bottom:8px;
     }
-    .mine-depth{
+    .sky{
+      position:absolute;left:0;right:0;top:0;height:40px;
+      background:radial-gradient(circle at 20% 0%,#2f89ff 0%,#131b2b 60%);
+    }
+    .ground-top{
+      position:absolute;left:0;right:0;top:40px;height:8px;
+      background:#3b2a17;
+    }
+    .ground-layer{
+      position:absolute;left:0;right:0;
+      height:18px;
+      background:repeating-linear-gradient(
+        90deg,
+        #1a1f30 0 20px,
+        #171c2a 20px 40px
+      );
+      border-top:1px solid rgba(0,0,0,0.5);
+    }
+    .ground-layer.layer1{top:48px;}
+    .ground-layer.layer2{top:66px;}
+    .ground-layer.layer3{top:84px;}
+    .ground-layer.layer4{top:102px;}
+    .ground-layer.layer5{top:120px;}
+
+    .ore-spot{
       position:absolute;
-      bottom:6px;left:0;right:0;
-      font-size:11px;color:var(--muted);
+      width:16px;height:10px;
+      border-radius:5px;
+      background:#f0cf6d;
+      box-shadow:0 0 8px rgba(240,207,109,0.6);
+      opacity:0.8;
     }
-    .big-number{font-size:26px;font-weight:800;text-shadow:0 0 10px rgba(0,0,0,0.8);}
-    .big-label{font-size:11px;color:var(--muted);}
+
+    .miner{
+      position:absolute;
+      bottom:34px;
+      left:10px;
+      width:32px;
+      height:32px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      animation:minerWalk 5s linear infinite;
+    }
+    .miner-body{
+      width:24px;height:24px;
+      border-radius:6px;
+      background:linear-gradient(135deg,#ffd46b,#f0b944);
+      border:1px solid #c99935;
+      position:relative;
+      box-shadow:0 4px 10px rgba(0,0,0,0.6);
+    }
+    .miner-head{
+      position:absolute;
+      top:-13px;left:3px;
+      width:18px;height:18px;
+      border-radius:50%;
+      background:#f6e0b2;
+      border:1px solid rgba(0,0,0,0.2);
+    }
+    .miner-helmet{
+      position:absolute;
+      top:-15px;left:1px;
+      width:22px;height:12px;
+      border-radius:6px 6px 4px 4px;
+      background:#1c2739;
+      border:1px solid #101622;
+    }
+    .miner-helmet::before{
+      content:"";
+      position:absolute;
+      top:3px;left:7px;
+      width:8px;height:8px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%,#fff 0%,#ffe16f 35%,#f0c649 70%);
+      box-shadow:0 0 8px rgba(240,207,109,0.9);
+    }
+    .miner-pickaxe{
+      position:absolute;
+      right:-10px;top:2px;
+      width:16px;height:16px;
+      transform-origin:left bottom;
+      animation:pickaxeSwing 1.4s ease-in-out infinite;
+    }
+    .miner-pickaxe::before{
+      content:"";
+      position:absolute;
+      left:6px;bottom:2px;
+      width:3px;height:11px;
+      background:#caa24f;
+      border-radius:2px;
+    }
+    .miner-pickaxe::after{
+      content:"";
+      position:absolute;
+      left:0;top:0;
+      width:14px;height:6px;
+      border-radius:3px;
+      background:linear-gradient(135deg,#cfd5e8,#9aa4c6);
+    }
+
+    .spark{
+      position:absolute;
+      width:6px;height:6px;
+      border-radius:50%;
+      background:#ffdf88;
+      box-shadow:0 0 8px rgba(255,223,136,0.8);
+      opacity:0;
+      animation:sparkle 0.6s ease-out infinite;
+    }
+
+    @keyframes minerWalk{
+      0%{transform:translateX(4px);}
+      50%{transform:translateX(250px);}
+      100%{transform:translateX(4px);}
+    }
+    @keyframes pickaxeSwing{
+      0%,100%{transform:rotate(-20deg);}
+      50%{transform:rotate(25deg);}
+    }
+    @keyframes sparkle{
+      0%{opacity:0;transform:translateY(0) scale(0.7);}
+      30%{opacity:1;}
+      100%{opacity:0;transform:translateY(-12px) scale(1);}
+    }
+
+    .mine-info{
+      margin-top:4px;
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
     .btn-primary{
       width:100%;
       margin-top:6px;
@@ -244,7 +371,7 @@
     </div>
   </div>
 
-  <!-- Balances -->
+  <!-- Балансы -->
   <div class="panel">
     <div class="panel-title" id="balancesTitle">Balances</div>
     <div class="row">
@@ -273,25 +400,54 @@
     </div>
   </div>
 
-  <!-- Mining -->
-  <div class="panel mine-area">
+  <!-- Сцена шахты -->
+  <div class="panel">
     <div class="panel-title">
       <span id="mineTitle">Mining</span>
       <span style="font-size:11px;color:var(--muted);" id="toolInfo">
-        Pickaxe: durability <span id="toolDurability">200</span>
+        Pickaxe durability: <span id="toolDurability">200</span>
       </span>
     </div>
 
-    <div class="mine-circle" id="mineCircle">
-      <div class="big-number" id="minePowerText">+1</div>
-      <div class="big-label" id="mineLabel">ore per tap</div>
-      <div class="mine-depth" id="mineDepthText">Depth 1</div>
+    <div class="mine-scene">
+      <div class="sky"></div>
+      <div class="ground-top"></div>
+      <div class="ground-layer layer1"></div>
+      <div class="ground-layer layer2"></div>
+      <div class="ground-layer layer3"></div>
+      <div class="ground-layer layer4"></div>
+      <div class="ground-layer layer5"></div>
+
+      <!-- немного руды в земле -->
+      <div class="ore-spot" style="left:40px;top:72px;"></div>
+      <div class="ore-spot" style="left:120px;top:90px;"></div>
+      <div class="ore-spot" style="left:210px;top:108px;"></div>
+      <div class="ore-spot" style="left:300px;top:82px;"></div>
+
+      <!-- искры возле кирки -->
+      <div class="spark" style="left:70px;bottom:40px;"></div>
+      <div class="spark" style="left:140px;bottom:52px;"></div>
+      <div class="spark" style="left:220px;bottom:46px;"></div>
+
+      <!-- шахтёр -->
+      <div class="miner">
+        <div class="miner-body">
+          <div class="miner-helmet"></div>
+          <div class="miner-head"></div>
+          <div class="miner-pickaxe"></div>
+        </div>
+      </div>
     </div>
 
-    <button class="btn-primary" id="mineBtn">⛏ Mine</button>
+    <div class="mine-info">
+      <span id="autoInfo">Auto mining: +1 common ore / 2s</span>
+      <span id="tapInfo">Tap to help miner and get extra ore.</span>
+    </div>
+
+    <button class="btn-primary" id="mineBtn">👆 Tap to help</button>
 
     <div class="row" style="margin-top:8px;">
-      <button class="btn-sm green" id="buyToolBtn">⚒️ Buy new pickaxe</button>
+      <button class="btn-sm green" id="buyToolBtn">⚒️ Buy new pickaxe (20 common)</button>
       <button class="btn-sm gold" id="btnCommonToRare">↻ 50 common → 1 rare</button>
     </div>
     <div class="row" style="margin-top:6px;">
@@ -305,7 +461,7 @@
     <div class="log" id="logBox"></div>
   </div>
 
-  <!-- Bank -->
+  <!-- Банк -->
   <div class="panel">
     <div class="panel-title">
       <span id="bankTitle">Ton21 Bank</span>
@@ -335,7 +491,8 @@
     diamonds: 0,
     t21: 0,
     depth: 1,
-    minePower: 1,
+    minePowerManual: 3,   // за тап
+    minePowerAuto: 1,     // авто-добыча
     toolDurability: 200,
     toolMaxDurability: 200
   };
@@ -356,7 +513,9 @@
       t21: "T21 (in game)",
       mining: "Mining",
       ore_per_tap: "ore per tap",
-      buy_tool: "⚒️ Buy new pickaxe",
+      auto_info: "Auto mining: +1 common / 2s",
+      tap_info: "Tap to help the miner and get extra ore.",
+      buy_tool: "⚒️ Buy new pickaxe (20 common)",
       c2r: "↻ 50 common → 1 rare",
       r2e: "↻ 5 rare → 1 epic",
       e2d: "↻ 2 epic → 1 💎",
@@ -367,7 +526,8 @@
       bank_rule_value: "100 T21 = 1 request",
       bank_info: "When you reach 100 T21, you can send a withdrawal request. Real T21 will be paid manually by admin.",
       withdraw_btn: "🏦 Request withdrawal (100 T21)",
-      log_mine: "You mined common ore.",
+      log_mine: "You helped the miner and got common ore.",
+      log_auto: "Miner dug some common ore.",
       log_tool_broken: "Your pickaxe is broken. Buy a new one to continue.",
       log_tool_buy_ok: "New pickaxe bought!",
       log_tool_buy_fail: "Not enough common ore to buy a pickaxe.",
@@ -396,7 +556,9 @@
       t21: "T21 (в игре)",
       mining: "Добыча",
       ore_per_tap: "руды за клик",
-      buy_tool: "⚒️ Купить кирку",
+      auto_info: "Автодобыча: +1 обычная руда / 2 сек.",
+      tap_info: "Нажимай, чтобы помочь шахтёру и получить ещё руды.",
+      buy_tool: "⚒️ Купить кирку (20 обычной)",
       c2r: "↻ 50 обычной → 1 редкая",
       r2e: "↻ 5 редких → 1 эпическая",
       e2d: "↻ 2 эпические → 1 💎",
@@ -407,7 +569,8 @@
       bank_rule_value: "100 T21 = 1 заявка",
       bank_info: "Когда накопите 100 T21 в игре, сможете отправить заявку на вывод. Реальные T21 выплачиваются вручную админом.",
       withdraw_btn: "🏦 Отправить заявку (100 T21)",
-      log_mine: "Вы добыли обычную руду.",
+      log_mine: "Вы помогли шахтёру и получили обычную руду.",
+      log_auto: "Шахтёр добыл немного обычной руды.",
       log_tool_broken: "Кирка сломалась. Купите новую, чтобы продолжить.",
       log_tool_buy_ok: "Новая кирка куплена!",
       log_tool_buy_fail: "Недостаточно обычной руды для покупки кирки.",
@@ -436,7 +599,9 @@
       t21: "T21（游戏内）",
       mining: "挖矿",
       ore_per_tap: "每次点击的矿石",
-      buy_tool: "⚒️ 购买镐子",
+      auto_info: "自动挖矿：每 2 秒 +1 普通矿石",
+      tap_info: "点击帮助矿工，获得额外矿石。",
+      buy_tool: "⚒️ 购买镐子（20 普通矿石）",
       c2r: "↻ 50 普通 → 1 稀有",
       r2e: "↻ 5 稀有 → 1 史诗",
       e2d: "↻ 2 史诗 → 1 💎",
@@ -447,7 +612,8 @@
       bank_rule_value: "100 T21 = 1 次申请",
       bank_info: "当你在游戏中获得 100 T21 时，可以提交提现申请。真实 T21 将由管理员手动发放。",
       withdraw_btn: "🏦 提交提现申请 (100 T21)",
-      log_mine: "你挖到了普通矿石。",
+      log_mine: "你帮助了矿工，获得了普通矿石。",
+      log_auto: "矿工自动挖到了一些普通矿石。",
       log_tool_broken: "镐子坏了，需要购买新的。",
       log_tool_buy_ok: "已购买新的镐子！",
       log_tool_buy_fail: "普通矿石不足，无法购买镐子。",
@@ -476,7 +642,9 @@
       t21: "T21 (गेम में)",
       mining: "माइनिंग",
       ore_per_tap: "प्रति टैप अयस्क",
-      buy_tool: "⚒️ नया पिकैक्स खरीदें",
+      auto_info: "ऑटो माइनिंग: हर 2 सेकंड में +1 साधारण अयस्क",
+      tap_info: "खनिक की मदद करने के लिए टैप करें और अतिरिक्त अयस्क पाएं।",
+      buy_tool: "⚒️ नया पिकैक्स खरीदें (20 साधारण)",
       c2r: "↻ 50 साधारण → 1 दुर्लभ",
       r2e: "↻ 5 दुर्लभ → 1 एपिक",
       e2d: "↻ 2 एपिक → 1 💎",
@@ -487,7 +655,8 @@
       bank_rule_value: "100 T21 = 1 रिक्वेस्ट",
       bank_info: "जब आपके पास 100 T21 हो जाएंगे, तो आप निकासी रिक्वेस्ट भेज सकते हैं। असली T21 एडमिन द्वारा मैन्युअली भेजे जाएंगे।",
       withdraw_btn: "🏦 निकासी रिक्वेस्ट (100 T21)",
-      log_mine: "आपने साधारण अयस्क निकाला।",
+      log_mine: "आपने खनिक की मदद की और साधारण अयस्क पाया।",
+      log_auto: "खनिक ने कुछ साधारण अयस्क खोदा।",
       log_tool_broken: "आपका पिकैक्स टूट गया। जारी रखने के लिए नया खरीदें।",
       log_tool_buy_ok: "नया पिकैक्स खरीदा गया!",
       log_tool_buy_fail: "पिकैक्स खरीदने के लिए साधारण अयस्क पर्याप्त नहीं।",
@@ -497,7 +666,7 @@
       log_r2e_ok: "एक्सचेंज: 5 दुर्लभ → +1 एपिक।",
       log_e2d_fail: "एक्सचेंज के लिए 2 एपिक अयस्क चाहिए।",
       log_e2d_ok: "एक्सचेंज: 2 एपिक → +1 हीरा।",
-      log_d2t21_fail: " +1 T21 के लिए 1 हीरा चाहिए।",
+      log_d2t21_fail: "+1 T21 के लिए 1 हीरा चाहिए।",
       log_d2t21_ok: "हीरा एक्सचेंज हुआ → +1 T21।",
       log_withdraw_fail: "निकासी के लिए कम से कम 100 T21 चाहिए।",
       log_withdraw_ok: "निकासी रिक्वेस्ट तैयार। TON पता: ",
@@ -516,7 +685,9 @@
       t21: "T21 (խաղում)",
       mining: "Հանքափորում",
       ore_per_tap: "հանքաքար՝ մեկ սեղմումով",
-      buy_tool: "⚒️ Գնել նոր բահակ (кирка)",
+      auto_info: "Ավտոմայնինգ՝ +1 սովոր. / 2 վրկ.",
+      tap_info: "Սեղմիր, որ օգնես հանքագործին և ստանաս ավել հանքաքար։",
+      buy_tool: "⚒️ Գնել նոր բահակ (20 սովորական)",
       c2r: "↻ 50 սովոր. → 1 կրկ.",
       r2e: "↻ 5 կրկ. → 1 էպիկ",
       e2d: "↻ 2 էպիկ → 1 💎",
@@ -527,7 +698,8 @@
       bank_rule_value: "100 T21 = 1 հայտ",
       bank_info: "Երբ խաղում կունենաք 100 T21, կարող եք ուղարկել հայտ դուրսբերման համար։ Իրական T21-ը կվճարվի ադմինի կողմից ձեռքով։",
       withdraw_btn: "🏦 Ուղարկել հայտ (100 T21)",
-      log_mine: "Դուք հանքաքար եք հանել։",
+      log_mine: "Դուք օգնում եք հանքագործին և ստանում սովորական հանքաքար։",
+      log_auto: "Հանքագործը ավտոմատ հանել է հանքաքար։",
       log_tool_broken: "Բահակը կոտրվեց։ Գնեք նոր, որպեսզի շարունակեք։",
       log_tool_buy_ok: "Նոր բահակն գնված է։",
       log_tool_buy_fail: "Բավարար սովորական հանքաքար չկա բահակ գնելու համար։",
@@ -568,8 +740,6 @@
     diamondsVal: document.getElementById("diamondsVal"),
     t21Val: document.getElementById("t21Val"),
     mineTitle: document.getElementById("mineTitle"),
-    minePowerText: document.getElementById("minePowerText"),
-    mineLabel: document.getElementById("mineLabel"),
     mineDepthText: document.getElementById("mineDepthText"),
     toolInfo: document.getElementById("toolInfo"),
     toolDurability: document.getElementById("toolDurability"),
@@ -592,7 +762,8 @@
     adOverlay: document.getElementById("adOverlay"),
     adText: document.getElementById("adText"),
     adTimer: document.getElementById("adTimer"),
-    mineCircle: document.getElementById("mineCircle")
+    autoInfo: document.getElementById("autoInfo"),
+    tapInfo: document.getElementById("tapInfo")
   };
 
   function applyLang(){
@@ -609,7 +780,8 @@
     els.lblDiamonds.textContent = t("diamonds");
     els.lblT21.textContent = t("t21");
     els.mineTitle.textContent = t("mining");
-    els.mineLabel.textContent = t("ore_per_tap");
+    els.autoInfo.textContent = t("auto_info");
+    els.tapInfo.textContent = t("tap_info");
     els.buyToolBtn.textContent = t("buy_tool");
     els.btnC2R.textContent = t("c2r");
     els.btnR2E.textContent = t("r2e");
@@ -649,8 +821,6 @@
     els.diamondsVal.textContent = state.diamonds;
     els.t21Val.textContent = state.t21;
     els.depthLevel.textContent = state.depth;
-    els.minePowerText.textContent = "+" + state.minePower;
-    els.mineDepthText.textContent = t("depth") + " " + state.depth;
     els.toolDurability.textContent = state.toolDurability;
     els.t21ProgressText.textContent = state.t21 + " / 100";
     els.withdrawBtn.disabled = state.t21 < 100;
@@ -662,10 +832,7 @@
     if (adRunning) return;
     adRunning = true;
 
-    // TODO: когда подключишь TonPlay SDK, можно вызвать здесь настоящий показ рекламы.
-    // Пример (псевдокод):
-    // TonPlay.rewarded.show().then(() => callback()).finally(() => hide overlay);
-
+    // сюда позже можно подключить реальный показ TonPlay Ads
     let remaining = 7;
     els.adText.textContent = t("ad_title");
     els.adTimer.textContent = remaining;
@@ -685,15 +852,13 @@
   }
 
   // -------------------- Game logic --------------------
-  function mine(){
+  function mineManual(){
     if (state.toolDurability <= 0){
       addLog(t("log_tool_broken"));
       return;
     }
-    state.common += state.minePower;
+    state.common += state.minePowerManual;
     state.toolDurability -= 1;
-    els.mineCircle.style.transform = "scale(0.96)";
-    setTimeout(()=>{ els.mineCircle.style.transform = "scale(1)"; }, 90);
     addLog(t("log_mine"));
     updateUI();
   }
@@ -772,16 +937,24 @@
     }
     const addr = prompt("Enter your TON address / Введите ваш TON-адрес:");
     if (!addr) return;
-    // Здесь в будущем можно отправить запрос в твой backend / бота.
     addLog(t("log_withdraw_ok") + addr);
-    alert("Request saved locally.\nIn real version this will be sent to @Ton21MineBot.\n\nTON: " + addr + "\nAmount: 100 T21");
-    // Можно уменьшить баланс в игре:
+    alert("Request saved locally.\nВ реальной версии это пойдёт в @Ton21MineBot.\n\nTON: " + addr + "\nAmount: 100 T21");
     state.t21 -= 100;
     updateUI();
   }
 
+  // Авто-майнинг: каждые 2 секунды
+  setInterval(()=>{
+    if (adRunning) return;
+    if (state.toolDurability <= 0) return;
+    state.common += state.minePowerAuto;
+    state.toolDurability -= 1;
+    addLog(t("log_auto"));
+    updateUI();
+  }, 2000);
+
   // -------------------- Event listeners --------------------
-  els.mineBtn.addEventListener("click", mine);
+  els.mineBtn.addEventListener("click", mineManual);
   els.buyToolBtn.addEventListener("click", buyTool);
   els.btnC2R.addEventListener("click", doCommonToRare);
   els.btnR2E.addEventListener("click", doRareToEpic);
